@@ -32,6 +32,7 @@ public class AlserverRoster {
 
 			this.discord = new ClientBuilder()
 					.withToken(this.setting.getSetting().getProperty("discordtoken"))
+					.registerListener(DiscordEventListener.INSTANCE)
 					.login();
 		} catch (final Exception e) {
 			LOG.error("起動中にエラーが発生しました");
