@@ -1,8 +1,26 @@
 package net.teamfruit.alserverroster;
 
-import org.apache.commons.lang3.StringUtils;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.SheetsScopes;
 
 import sx.blah.discord.Discord4J.Discord4JLogger;
 import sx.blah.discord.api.ClientBuilder;
@@ -13,6 +31,8 @@ public class AlserverRoster {
 	public static final Logger LOG = new Discord4JLogger(AlserverRoster.class.getName());
 
 	private Setting setting;
+
+	private Sheets sheets;
 	private IDiscordClient discord;
 
 	public void launch() {
@@ -25,15 +45,33 @@ public class AlserverRoster {
 			}
 			this.setting.load();
 			LOG.info("設定をロード");
-			if (StringUtils.isEmpty(this.setting.getSetting().getProperty("discordtoken"))) {
-				LOG.error("DiscordBotのトークンを設定して下さい！");
+			if (!this.setting.isValid()) {
+				LOG.error("全ての項目を設定してください！");
 				return;
 			}
 
+			final HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+			final FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(new File(".").getAbsoluteFile());
+			final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+			final List<String> scopes = Arrays.asList(SheetsScopes.SPREADSHEETS);
+
+			final InputStreamReader isr = new InputStreamReader(new FileInputStream(new File(this.setting.getProperty("google_client_secret"))));
+			final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory, isr);
+			final GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, scopes)
+					.setDataStoreFactory(dataStoreFactory)
+					.setAccessType("online")
+					.build();
+			final Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+
+			this.sheets = new Sheets.Builder(httpTransport, jsonFactory, credential)
+					.setApplicationName(this.setting.getProperty("application_name"))
+					.build();
+
 			this.discord = new ClientBuilder()
-					.withToken(this.setting.getSetting().getProperty("discordtoken"))
+					.withToken(this.setting.getProperty("discord_token"))
 					.registerListener(DiscordEventListener.INSTANCE)
 					.login();
+
 		} catch (final Exception e) {
 			LOG.error("起動中にエラーが発生しました");
 			LOG.error(ExceptionUtils.getStackTrace(e));
@@ -42,6 +80,10 @@ public class AlserverRoster {
 
 	public Setting getSetting() {
 		return this.setting;
+	}
+
+	public Sheets getSheets() {
+		return this.sheets;
 	}
 
 	public IDiscordClient getDiscordClient() {
