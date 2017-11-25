@@ -42,9 +42,9 @@ public class AlserverRoster {
 				this.setting.save();
 				LOG.info("設定ファイルを"+this.setting.getSettingFile()+"に生成しました");
 				return;
-			} else
-				this.setting.save();
+			}
 			this.setting.load();
+			this.setting.save();
 			LOG.info("設定をロード");
 			if (!this.setting.isValid()) {
 				LOG.error("設定に空の項目があります");
