@@ -8,10 +8,27 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.collect.ImmutableMap;
+
 public class Setting {
+	private static final ImmutableMap<String, String> DEFAULT_PROPERTIES;
+
+	static {
+		final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+		DEFAULT_PROPERTIES = builder
+				.put("discord_token", "")
+				.put("google_client_secret", "client_secret.json")
+				.put("spreadsheet_id", "")
+				.put("application_name", "")
+				.build();
+	}
 
 	private File file = new File("setting.properties").getAbsoluteFile();
 	private Properties setting = new Properties();
+
+	public Setting() {
+		getSetting().putAll(DEFAULT_PROPERTIES);
+	}
 
 	public File getSettingFile() {
 		return this.file;
@@ -44,14 +61,6 @@ public class Setting {
 		try (FileOutputStream fos = new FileOutputStream(getSettingFile())) {
 			getSetting().store(fos, null);
 		}
-		return this;
-	}
-
-	public Setting reset() {
-		getSetting().setProperty("discord_token", "");
-		getSetting().setProperty("google_client_secret", "client_secret.json");
-		getSetting().setProperty("spreadsheet_id", "");
-		getSetting().setProperty("application_name", "");
 		return this;
 	}
 

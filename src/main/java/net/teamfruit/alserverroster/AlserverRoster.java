@@ -39,14 +39,15 @@ public class AlserverRoster {
 		try {
 			this.setting = new Setting();
 			if (!this.setting.exists()) {
-				this.setting.reset().save();
+				this.setting.save();
 				LOG.info("設定ファイルを"+this.setting.getSettingFile()+"に生成しました");
 				return;
-			}
+			} else
+				this.setting.save();
 			this.setting.load();
 			LOG.info("設定をロード");
 			if (!this.setting.isValid()) {
-				LOG.error("全ての項目を設定してください！");
+				LOG.error("設定に空の項目があります");
 				return;
 			}
 
