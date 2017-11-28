@@ -17,8 +17,10 @@ public class Setting {
 		final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 		DEFAULT_PROPERTIES = builder
 				.put("discord_token", "")
+				.put("discord_guild_id", "")
 				.put("google_client_secret", "client_secret.json")
 				.put("spreadsheet_id", "")
+				.put("sheet_name", "")
 				.put("application_name", "")
 				.build();
 	}

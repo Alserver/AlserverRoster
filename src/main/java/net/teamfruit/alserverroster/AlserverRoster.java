@@ -25,14 +25,14 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import sx.blah.discord.Discord4J.Discord4JLogger;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.handle.obj.IGuild;
 
 public class AlserverRoster {
 	public static AlserverRoster instance;
 	public static final Logger LOG = new Discord4JLogger(AlserverRoster.class.getName());
 
 	private Setting setting;
-
-	private Sheets sheets;
+	private RosterClient roster;
 	private IDiscordClient discord;
 
 	public void launch() {
@@ -64,7 +64,7 @@ public class AlserverRoster {
 					.build();
 			final Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 
-			this.sheets = new Sheets.Builder(httpTransport, jsonFactory, credential)
+			final Sheets sheets = new Sheets.Builder(httpTransport, jsonFactory, credential)
 					.setApplicationName(this.setting.getProperty("application_name"))
 					.build();
 
@@ -72,6 +72,9 @@ public class AlserverRoster {
 					.withToken(this.setting.getProperty("discord_token"))
 					.registerListener(DiscordEventListener.INSTANCE)
 					.login();
+
+			final IGuild guild = this.discord.getGuildByID(Long.parseLong(this.setting.getProperty("discord_guild_id")));
+			this.roster = new RosterClient(sheets, this.setting.getProperty("spreadsheet_id"), this.setting.getProperty("sheet_name"), guild);
 
 		} catch (final Exception e) {
 			LOG.error("起動中にエラーが発生しました");
@@ -83,12 +86,12 @@ public class AlserverRoster {
 		return this.setting;
 	}
 
-	public Sheets getSheets() {
-		return this.sheets;
-	}
-
 	public IDiscordClient getDiscordClient() {
 		return this.discord;
+	}
+
+	public RosterClient getRosterClient() {
+		return this.roster;
 	}
 
 	public static void main(final String[] args) {
