@@ -2,6 +2,7 @@ package net.teamfruit.alserverroster;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +26,8 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import sx.blah.discord.Discord4J.Discord4JLogger;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.obj.IGuild;
 
 public class AlserverRoster {
@@ -32,6 +35,7 @@ public class AlserverRoster {
 	public static final Logger LOG = new Discord4JLogger(AlserverRoster.class.getName());
 
 	private Setting setting;
+	private Sheets sheets;
 	private RosterClient roster;
 	private IDiscordClient discord;
 
@@ -64,20 +68,29 @@ public class AlserverRoster {
 					.build();
 			final Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 
-			final Sheets sheets = new Sheets.Builder(httpTransport, jsonFactory, credential)
+			this.sheets = new Sheets.Builder(httpTransport, jsonFactory, credential)
 					.setApplicationName(this.setting.getProperty("application_name"))
 					.build();
 
 			this.discord = new ClientBuilder()
 					.withToken(this.setting.getProperty("discord_token"))
-					.registerListener(DiscordEventListener.INSTANCE)
+					.registerListeners(this, DiscordEventListener.INSTANCE)
 					.login();
-
-			final IGuild guild = this.discord.getGuildByID(Long.parseLong(this.setting.getProperty("discord_guild_id")));
-			this.roster = new RosterClient(sheets, this.setting.getProperty("spreadsheet_id"), this.setting.getProperty("sheet_name"), guild);
 
 		} catch (final Exception e) {
 			LOG.error("起動中にエラーが発生しました");
+			LOG.error(ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	@EventSubscriber
+	public void onDiscordReady(final ReadyEvent event) {
+		try {
+			final IGuild guild = this.discord.getGuildByID(Long.parseLong(this.setting.getProperty("discord_guild_id")));
+			this.roster = new RosterClient(this.sheets, this.setting.getProperty("spreadsheet_id"), this.setting.getProperty("sheet_name"), guild);
+			this.roster.init();
+		} catch (final IOException e) {
+			LOG.error("名簿の初期化に失敗しました");
 			LOG.error(ExceptionUtils.getStackTrace(e));
 		}
 	}
