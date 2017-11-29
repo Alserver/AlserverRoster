@@ -65,9 +65,9 @@ public class RosterClient {
 		final ValueRange range = new ValueRange();
 		range.setMajorDimension("COLUMNS");
 		range.setValues(row);
-		System.out.println(this.sheets.spreadsheets().values()
+		this.sheets.spreadsheets().values()
 				.update(this.id, this.name, range)
 				.setValueInputOption("USER_ENTERED")
-				.execute());
+				.execute();
 	}
 }
