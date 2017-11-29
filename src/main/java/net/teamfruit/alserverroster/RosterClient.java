@@ -48,7 +48,7 @@ public class RosterClient {
 		for (final ListIterator<IRole> it = this.guild.getRoles().listIterator(this.guild.getRoles().size()); it.hasPrevious();) {
 			final IRole role = it.previous();
 			final List<IUser> roleusers = this.guild.getUsersByRole(role);
-			if (role.isHoisted()&&!roleusers.isEmpty()) {
+			if (role.isHoisted()||role.isEveryoneRole()&&!roleusers.isEmpty()) {
 				a.add(role.getLongID());
 				b.add(role.getName());
 				a.add("");
