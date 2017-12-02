@@ -38,7 +38,7 @@ public class RosterClient {
 	}
 
 	private void createNewRoster() throws IOException {
-		final List<Object> a = Lists.newArrayList("", "", "");
+		final List<Object> a = Lists.newArrayList("", "");
 		final List<Object> b = Lists.newArrayList("Members", this.guild.getTotalMemberCount(), "");
 		final List<List<Object>> row = Lists.newArrayList();
 		row.add(a);
@@ -48,17 +48,17 @@ public class RosterClient {
 		for (final ListIterator<IRole> it = this.guild.getRoles().listIterator(this.guild.getRoles().size()); it.hasPrevious();) {
 			final IRole role = it.previous();
 			final List<IUser> roleusers = this.guild.getUsersByRole(role);
-			if (role.isHoisted()||role.isEveryoneRole()&&!roleusers.isEmpty()) {
+			if ((role.isHoisted()||role.isEveryoneRole())&&!roleusers.isEmpty()) {
+				a.add("Role");
 				a.add(role.getLongID());
 				b.add(role.getName());
-				a.add("");
+				a.add("User");
 				b.add("Name");
 				for (final IUser user : roleusers)
 					if (users.remove(user)) {
 						a.add(user.getLongID());
 						b.add(user.getDisplayName(this.guild));
 					}
-				a.add("");
 				b.add("");
 			}
 		}
