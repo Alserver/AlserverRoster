@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -34,6 +35,33 @@ public class RosterClient {
 				.execute().getValues();
 		if (values==null||values.isEmpty())
 			createNewRoster();
+
+	}
+
+	private List<Object> getIDs() throws IOException {
+		return this.sheets.spreadsheets().values()
+				.get(this.id, this.name+"!A:A")
+				.execute().getValues()
+				.get(0).stream().map(Object::toString).collect(Collectors.toList());
+	}
+
+	public void addUser(final IUser user) throws IOException {
+
+	}
+
+	public void removeUser(final IUser user) {
+
+	}
+
+	public void userRoleUpdate(final IUser user) {
+
+	}
+
+	public void userNameUpdate(final IUser user) {
+
+	}
+
+	private void updateRoster() {
 
 	}
 
